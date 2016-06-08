@@ -57,46 +57,56 @@ class PluginBarcodeQRcode {
       $item = new $itemtype();
       $item->getFromDB($items_id);
       $a_content = array();
+      $onlyurl=true;
       $have_content = FALSE;
       if ($data['serialnumber']) {
          if ($item->fields['serial'] != '') {
             $have_content = TRUE;
          }
          $a_content[] = 'Serial Number = '.$item->fields['serial'];
+         $onlyurl=false;
       }
       if ($data['inventorynumber']) {
          if ($item->fields['otherserial'] != '') {
             $have_content = TRUE;
          }
          $a_content[] = 'Inventory Number = '.$item->fields['otherserial'];
+         $onlyurl=false;          
       }
       if ($data['id']) {
          if ($item->fields['id'] != '') {
             $have_content = TRUE;
          }
          $a_content[] = 'ID = '.$item->fields['id'];
+         $onlyurl=false;          
       }
       if ($data['uuid']) {
          if ($item->fields['uuid'] != '') {
             $have_content = TRUE;
          }
          $a_content[] = 'UUID = '.$item->fields['uuid'];
+         $onlyurl=false;          
       }      
       if ($data['name']) {
          if ($item->fields['name'] != '') {
             $have_content = TRUE;
          }
          $a_content[] = 'Name = '.$item->fields['name'];
+         $onlyurl=false;          
       }
       if ($data['url']) {
-         $a_content[] = 'URL = '.$CFG_GLPI["url_base"].Toolbox::getItemTypeFormURL($itemtype, false)."?id=".$items_id;
-      }      
+         if ($onlyurl)
+             $a_content[] =$CFG_GLPI["url_base"].Toolbox::getItemTypeFormURL($itemtype, false)."?id=".$items_id; 
+         else
+             $a_content[] = 'URL:'.$CFG_GLPI["url_base"].Toolbox::getItemTypeFormURL($itemtype, false)."?id=".$items_id;                      
+      }
+       
       if ($data['qrcodedate']) {
          $a_content[] = 'QRcode date = '.date('Y-m-d');
       }      
       
       if (count($a_content) > 0) {
-         $codeContents = implode("\n", $a_content);
+         $codeContents = implode(";", $a_content);
          QRcode::png($codeContents, 
                      GLPI_PLUGIN_DOC_DIR.'/barcode/_tmp_'.$rand.'-'.$number.'.png',
                      QR_ECLEVEL_L, 
@@ -124,31 +134,31 @@ class PluginBarcodeQRcode {
       echo '<tr>';
       echo '<td>';
       echo __('Serial number')." : </td><td>";
-      Dropdown::showYesNo("serialnumber", 1, -1, array('width' => '100'));
+      Dropdown::showYesNo("serialnumber", 0, -1, array('width' => '100'));
       echo '</td>';
       echo '</tr>';
       echo '<tr>';
       echo '<td>';
       echo __('Inventory number')." : </td><td>";
-      Dropdown::showYesNo("inventorynumber", 1, -1, array('width' => '100')); 
+      Dropdown::showYesNo("inventorynumber", 0, -1, array('width' => '100')); 
       echo '</td>';
       echo '</tr>';
       echo '<tr>';
       echo '<td>';
       echo __('ID')." : </td><td>";
-      Dropdown::showYesNo("id", 1, -1, array('width' => '100')); 
+      Dropdown::showYesNo("id", 0, -1, array('width' => '100')); 
       echo '</td>';
       echo '</tr>';
       echo '<tr>';
       echo '<td>';
       echo __('UUID')." : </td><td>";
-      Dropdown::showYesNo("uuid", 1, -1, array('width' => '100')); 
+      Dropdown::showYesNo("uuid", 0, -1, array('width' => '100')); 
       echo '</td>';
       echo '</tr>';
       echo '<tr>';
       echo '<td>';
       echo __('Name')." : </td><td>";
-      Dropdown::showYesNo("name", 1, -1, array('width' => '100'));
+      Dropdown::showYesNo("name", 0, -1, array('width' => '100'));
       echo '</td>';
       echo '</tr>';
       echo '<tr>';
@@ -160,7 +170,7 @@ class PluginBarcodeQRcode {
       echo '<tr>';
       echo '<td>';
       echo __('Date QRcode')." (".date('Y-m-d').") : </td><td>";
-      Dropdown::showYesNo("qrcodedate", 1, -1, array('width' => '100'));
+      Dropdown::showYesNo("qrcodedate", 0, -1, array('width' => '100'));
       echo '</td>';
       echo '</tr>';
       echo '</table>';
@@ -215,7 +225,9 @@ class PluginBarcodeQRcode {
                foreach ($ids as $key) {
                   $filename = $pbQRcode->generateQRcode($item->getType(), $key, $rand, $number, $ma->POST);
                   if ($filename) {
-                     $codes[] = $filename;
+                     $item = new $itemtype();
+      		         $item->getFromDB($key);
+                     $codes[] = array("file"=>$filename,"name"=>$item->fields['name'],"type"=>$data['itemtype']);
                      $number++;
                   }
                }
@@ -232,6 +244,7 @@ class PluginBarcodeQRcode {
                $params['type']   = $ma->POST['type'];
                $params['size']   = $ma->POST['size'];
                $params['border'] = $ma->POST['border'];
+               $params['printer'] = $ma->POST['printer'] 
                $params['orientation'] = $ma->POST['orientation'];
                $barcode = new PluginBarcodeBarcode();
                $file = $barcode->printPDF($params);

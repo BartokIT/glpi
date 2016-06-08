@@ -44,17 +44,16 @@ function plugin_barcode_MassiveActions($type) {
 
    switch ($type) {
       // New action for core and other plugin types : name = plugin_PLUGINNAME_actionname
-      case 'Computer' :
-      case 'Monitor' :
+        case 'Computer' :
+        case 'Monitor' :
 		case 'Networking' :
 		case 'Printer' :
 		case 'Peripheral' :
 		case 'Phone' :
-         return array("PluginBarcodeBarcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate' => __('Barcode', 'barcode')." - ".__('Print barcodes', 'barcode'),
-                      "PluginBarcodeQRcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate'  => __('Barcode', 'barcode')." - ".__('Print QRcodes', 'barcode'));
+           return array("PluginBarcodeQRcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate'  => __('Barcode', 'barcode')." - ".__('Print QRcodes', 'barcode'));
          
-		case 'Ticket' :
-         return array("PluginBarcodeBarcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate' => __('Barcode', 'barcode')." - ".__('Print barcodes', 'barcode'));
+//		case 'Ticket' :
+//         return array("PluginBarcodeBarcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate' => __('Barcode', 'barcode')." - ".__('Print barcodes', 'barcode'));
 
 //      case 'Profile' :
 //         return array("plugin_barcode_allow" => __('Barcode', 'barcode'));

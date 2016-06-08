@@ -220,6 +220,12 @@ class PluginBarcodeBarcode {
       echo '<table>';
       echo '<tr>';
       echo '<td>';
+      echo "<br/>".__('Printer', 'barcode')." : </td><td>";
+      Dropdown::showFromArray("printer",array(0=>"Olivetti d-Copia 3000MF",1=>"HP 4050N",2=>"Samsung SCX-4623"));
+      echo '</td>';
+      echo '</tr>';       
+      echo '<tr>';
+      echo '<td>';
 		echo "<br/>".__('Page size', 'barcode')." : </td><td>";
 		$pbBarcode->showSizeSelect($config['size']);
       echo '</td>';
@@ -258,6 +264,7 @@ class PluginBarcodeBarcode {
       $ext = 'png';
       $type = $p_params['type'];
       $size = $p_params['size'];
+      $printer = $p_params['printer'];
       $orientation = $p_params['orientation'];
       $codes = array();
       if ($type == 'QRcode') {
@@ -302,7 +309,9 @@ class PluginBarcodeBarcode {
       $height  = $config['maxCodeHeight'];
       $marginH = $config['marginHorizontal'];
       $marginV = $config['marginVertical'];
-      
+      $marginT = $config['marginTop']; 
+      $marginB = $config['marginBottom'];
+       
       $heightimage = $height;
 
       if (file_exists(GLPI_PLUGIN_DOC_DIR.'/barcode/logo.png')) {
@@ -345,10 +354,11 @@ class PluginBarcodeBarcode {
          }
          if ($code != '') {
             if ($type == 'QRcode') {
-               $imgFile = $code;
+               $imgFile = $code["file"];
             } else {
                $imgFile = $this->docsPath.$code.'_'.$type.'.'.$ext;
             }
+             
             if (file_exists($imgFile)) {
                $imgSize = getimagesize($imgFile);
                $imgWidth = $imgSize[0];
