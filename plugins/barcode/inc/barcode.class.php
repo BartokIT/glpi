@@ -303,7 +303,7 @@ class PluginBarcodeBarcode {
       require_once(GLPI_ROOT."/plugins/barcode/lib/ezpdf/class.ezpdf.php");
 
       $pdf= new Cezpdf($size, $orientation);
-      $pdf->selectFont(GLPI_ROOT."/plugins/barcode/lib/ezpdf/fonts/Helvetica.afm");
+      $pdf->selectFont(GLPI_ROOT."/plugins/barcode/lib/ezpdf/fonts/Consolas.afm");
       $pdf->ezStartPageNumbers($pdf->ez['pageWidth']-30, 10, 10, 'left', '{PAGENUM} / {TOTALPAGENUM}').
       $width   = $config['maxCodeWidth'];
       $height  = $config['maxCodeHeight'];
@@ -320,18 +320,19 @@ class PluginBarcodeBarcode {
          $imgSize = getimagesize(GLPI_PLUGIN_DOC_DIR.'/barcode/logo.png');
          $logoWidth = $imgSize[0];
          $logoHeight = $imgSize[1];
-         if ($logoHeight > $heightLogomax) {
+         /*if ($logoHeight > $heightLogomax) {
             $ratio = (100 * $heightLogomax ) / $logoHeight;
             $logoHeight = $heightLogomax;
             $logoWidth = $logoWidth * ($ratio / 100);
-         } 
-         if ($logoWidth > $width) {
-            $ratio = (100 * $width ) / $logoWidth;
-            $logoWidth = $width;
+         }*/ 
+         $maxLogoWidth = $width - $height;
+         if ($logoWidth > $maxLogoWidth) {
+            $ratio = (100 * $maxLogoWidth)/ $logoWidth;
+            $logoWidth = $maxLogoWidth;
             $logoHeight = $logoHeight * ($ratio / 100);
          }
          $heightyposText = $height - $logoHeight;
-         $heightimage = $heightyposText;
+         //$heightimage = $heightyposText;
       }
       
       
@@ -377,7 +378,7 @@ class PluginBarcodeBarcode {
                $image = imagecreatefrompng($imgFile);               
                if ($imgWidth < $width) {
                   $pdf->addImage($image, 
-                                 $x + (($width - $imgWidth) / 2), 
+                                 $x, 
                                  $y, 
                                  $imgWidth, 
                                  $imgHeight);
@@ -392,7 +393,7 @@ class PluginBarcodeBarcode {
                if (file_exists(GLPI_PLUGIN_DOC_DIR.'/barcode/logo.png')) {
                   $logoimg = imagecreatefrompng(GLPI_PLUGIN_DOC_DIR.'/barcode/logo.png');
                   $pdf->addImage($logoimg, 
-                                 $x + (($width - $logoWidth) / 2), 
+                                 $x + $imgWidth + (($width - $imgWidth - $logoWidth - 10) / 2), 
                                  $y + $heightyposText, 
                                  $logoWidth, 
                                  $logoHeight);
@@ -400,6 +401,21 @@ class PluginBarcodeBarcode {
                if ($p_params['border']) {
                   $pdf->Rectangle($x, $y, $width, $height);
                }
+		$fontsize=41;	
+		$refer_size = $width - $imgWidth - 10;
+		$textWidth = intval($pdf->getTextWidth($fontsize,$code['name']));
+				
+	 	while  (($textWidth > $refer_size) && ($fontsize > 1) )
+		{
+			$fontsize = $fontsize - 1;	
+			$textWidth = intval($pdf->getTextWidth($fontsize,$code['name']));
+		}
+		$textY = $y + (($imgHeight - $logoHeight)/ 2)-20 ;	
+		$textX = $x + $imgWidth  +  ($width - $imgWidth - $textWidth - 10)/2;
+		$pdf->addText($textX, $textY + 10,$fontsize,$code['name']);
+		$textWidth=$pdf->getTextWidth(15,strtoupper($code['type']));
+		$textX = $x + $imgWidth + ($width - $imgWidth - $textWidth - 10)/2;
+		$pdf->addText($textX, $textY - 5 , 15,strtoupper($code['type']));
             }
          }
          $x += $width + $marginH;

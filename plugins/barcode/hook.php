@@ -50,7 +50,7 @@ function plugin_barcode_MassiveActions($type) {
 		case 'Printer' :
 		case 'Peripheral' :
 		case 'Phone' :
-         return array("PluginBarcodeBarcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate' => __('Barcode', 'barcode')." - ".__('Print barcodes', 'barcode'),
+         return array(
                       "PluginBarcodeQRcode".MassiveAction::CLASS_ACTION_SEPARATOR.'Generate'  => __('Barcode', 'barcode')." - ".__('Print QRcodes', 'barcode'));
          
 		case 'Ticket' :

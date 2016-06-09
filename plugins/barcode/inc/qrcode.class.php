@@ -225,7 +225,8 @@ class PluginBarcodeQRcode {
                foreach ($ids as $key) {
                   $filename = $pbQRcode->generateQRcode($item->getType(), $key, $rand, $number, $ma->POST);
                   if ($filename) {
-                     $codes[] =  array("file"=>$filename,"name"=>$item->fields['name'],"type"=>$data['itemtype']);
+      		     $item->getFromDB($key);
+                     $codes[] =  array("file"=>$filename,"name"=>$item->getName(),"type"=>$item->getType());
                      $number++;
                   }
                }
