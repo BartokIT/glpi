@@ -301,12 +301,14 @@ class PluginAddressingAddressing extends CommonDBTM {
             $ipfin = $ipdeb+$_SESSION["glpilist_limit"]-1;
          }
       }
-
+      
+      
+      
       $result = array();
       for ($ip=$ipdeb ; $ip<=$ipfin ; $ip++) {
          $result["IP".$ip] = array();
       }
-
+   
       $sql = "SELECT `port`.`id`,
                      'NetworkEquipment' AS itemtype,
                      `dev`.`id` AS on_device,
@@ -332,12 +334,6 @@ class PluginAddressingAddressing extends CommonDBTM {
          $sql .= " AND `dev`.`networks_id` = ".$this->fields["networks_id"];
       }
       
-      //$ntypes = $CFG_GLPI["networkport_types"];
-      //foreach ($ntypes as $k => $v) {
-      //   if ($v == 'PluginFusioninventoryUnknownDevice') {
-      //      unset($ntypes[$k]);
-      //   }
-      //}
       
       foreach ($CFG_GLPI["networkport_types"] as $type) {
          $itemtable = getTableForItemType($type);
@@ -382,17 +378,48 @@ class PluginAddressingAddressing extends CommonDBTM {
             $sql .= " AND `dev`.`networks_id`= ".$this->fields["networks_id"];
          }
       }
+      
       $res = $DB->query($sql);
-      if ($res) {
-         while ($row=$DB->fetch_assoc($res)) {
+      if ($res) {         
+         while ($row=$DB->fetch_assoc($res)) { 
+          //  if (isset($reserved_ip[$row["ipnum"]])) {
+            //      $row["reserved"]=true;
+            //      $row["reserved_name"]=$reserved_ip[$row["ipnum"]]["name"];
+            //   }
             $result["IP".$row["ipnum"]][]=$row;
+            
          }
       }
-
       return $result;
    }
 
+   function getReservedIP() {
+      global $DB, $CFG_GLPI;
 
+      // sprintf to solve 32/64 bits issue
+      $ipdeb = sprintf("%u", ip2long($this->fields["begin_ip"]));
+      $ipfin = sprintf("%u", ip2long($this->fields["end_ip"]));
+      $reserved_ip = array();
+      $items = getTableForItemType("PluginAddressingReservation");
+      $sql = "SELECT begin_ip,end_ip,name,begin_ip_i,end_ip_i FROM $items WHERE NOT (begin_ip_i < $ipdeb AND end_ip_i < $ipdeb) AND NOT (begin_ip_i > $ipfin AND end_ip_i > $ipfin)";
+      
+      $res = $DB->query($sql);
+      if ($res) {
+         while ($row=$DB->fetch_assoc($res)) {
+            $range_begin=$row["begin_ip_i"];
+            $range_end  =$row["end_ip_i"];
+            if ($range_begin < $ipdeb && $range_end <= $ipfin)
+               $range_begin=$ipdeb;
+            if ($range_begin >= $ipdeb && $range_end > $ipfin)
+               $range_end=$ipfin;
+            for ($ip = $range_begin; $ip<=$range_end; $ip++) {
+               $reserved_ip["IP".$ip]=array("name"=>$row["name"],"ip"=>long2ip($ip));
+            }
+         }
+      }
+      return $reserved_ip;
+   }
+   
    function showReport($params) {
       global $CFG_GLPI;
 
@@ -486,9 +513,9 @@ class PluginAddressingAddressing extends CommonDBTM {
          }
 
          //////////////////////////liste ips////////////////////////////////////////////////////////////
-
-         $ping_response = $PluginAddressingReport->displayReport($result, $this);
-
+         $reserved = $this->getReservedIP();
+         $ping_response = $PluginAddressingReport->displayReport($result, $this,$reserved);
+         
          if ($this->fields['use_ping']) {
             $total_realfreeip=$nbipf-$ping_response;
             echo "<table class='tab_cadre_fixe'><tr class='tab_bg_2 center'>";

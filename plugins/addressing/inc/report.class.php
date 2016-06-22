@@ -91,7 +91,7 @@ class PluginAddressingReport extends CommonDBTM {
    }
 
 
-   function displayReport(&$result, $PluginAddressingAddressing) {
+   function displayReport(&$result, $PluginAddressingAddressing,$reserved_ip) {
       global $CFG_GLPI;
 
       $ping = $PluginAddressingAddressing->fields["use_ping"];
@@ -121,14 +121,14 @@ class PluginAddressingReport extends CommonDBTM {
       echo Search::showHeaderItem($output_type, _n('User', 'Users', 1),$header_num);
       echo Search::showHeaderItem($output_type, __('MAC address'),$header_num);
       echo Search::showHeaderItem($output_type, __('Item type'),$header_num);
-      echo Search::showHeaderItem($output_type, __('Free Ip', 'addressing'),$header_num);
+      echo Search::showHeaderItem($output_type, " ",$header_num);
       echo Search::showEndLine($output_type);
 
       $user = new User();
-
+      
       foreach ($result as $num => $lines) {
          $ip = long2ip(substr($num, 2));
-
+            
          if (count($lines)) {
             if (count($lines) > 1) {
                $disp = $PluginAddressingAddressing->fields["double_ip"];
@@ -142,7 +142,7 @@ class PluginAddressingReport extends CommonDBTM {
                   $name     = $line["dname"];
                   $namep    = $line["pname"];
                   // IP
-                  if ($PluginAddressingAddressing->fields["reserved_ip"] && strstr($line["pname"], "reserv")) {
+                  if ($PluginAddressingAddressing->fields["reserved_ip"]&& isset($reserved_ip[$num])) {
                      echo $this->displaySearchNewLine($output_type, "reserved");
                   } else {
                      echo $this->displaySearchNewLine($output_type, (count($lines) > 1 ? "double" : $row_num % 2));
@@ -202,11 +202,15 @@ class PluginAddressingReport extends CommonDBTM {
                      echo Search::showItem($output_type, " ", $item_num, $row_num);
                   }
                   // Type
-                  echo Search::showItem($output_type, $item::getTypeName(), $item_num, $row_num);
-
+                   if ($PluginAddressingAddressing->fields["reserved_ip"] && isset($reserved_ip[$num])) {
+                     echo Search::showItem($output_type, $item::getTypeName()."/".__("Reserved"), $item_num, $row_num); 
+                   }
+                   else {
+                     echo Search::showItem($output_type, $item::getTypeName(), $item_num, $row_num);
+                  }
                   // Reserved
-                  if ($PluginAddressingAddressing->fields["reserved_ip"] && strstr($line["pname"], "reserv")) {
-                     echo Search::showItem($output_type, __('Reserved Address', 'addressing'), $item_num, $row_num);
+                  if ($PluginAddressingAddressing->fields["reserved_ip"] && isset($reserved_ip[$num])) {                     
+                     echo Search::showItem($output_type, $reserved_ip[$num]["name"], $item_num, $row_num);
                   } else {
                      echo Search::showItem($output_type, " ", $item_num, $row_num);
                   }
@@ -226,11 +230,22 @@ class PluginAddressingReport extends CommonDBTM {
             
                Ajax::createIframeModalWindow('reserveip'.$rand, "reservation.form.php?ip=".trim($ip)."&id_addressing=".$PluginAddressingAddressing->getID(), array('height' => 350, 'reloadonclose' => true));
             }
-            if (!$ping) {
+            
+            if ($PluginAddressingAddressing->fields["reserved_ip"] && isset($reserved_ip[$num])) {
+               echo $this->displaySearchNewLine($output_type, "reserved");
+               echo Search::showItem($output_type, $ip, $item_num, $row_num);
+               echo Search::showItem($output_type,  $reserved_ip[$num]["name"] , $item_num, $row_num);
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
+               echo Search::showItem($output_type, __("Reserved"), $item_num, $row_num);
+               $content = " ";
+            } else if (!$ping) {
                echo $this->displaySearchNewLine($output_type, "free");
                echo Search::showItem($output_type, $ip, $item_num, $row_num);
                echo Search::showItem($output_type, " ", $item_num, $row_num);
-               
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
                if ($output_type == Search::HTML_OUTPUT) {
                
                   $content = "<a href=\"#\" onclick=\"".Html::jsGetElementbyID("reserveip".$rand).".dialog('open');return false;\">".__("Reserve")."</a>";
@@ -258,10 +273,12 @@ class PluginAddressingReport extends CommonDBTM {
                      $content = "";
                   }
                }
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
+               echo Search::showItem($output_type, " ", $item_num, $row_num);
             }
-            echo Search::showItem($output_type, " ", $item_num, $row_num);
-            echo Search::showItem($output_type, " ", $item_num, $row_num);
-            echo Search::showItem($output_type, " ", $item_num, $row_num);
+            
+
             echo Search::showItem($output_type, "$content ", $item_num, $row_num);
             echo Search::showEndLine($output_type);
          }

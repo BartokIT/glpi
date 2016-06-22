@@ -44,6 +44,10 @@ $addressing = new PluginAddressingReservation();
 if (isset($_POST["add"])) {
    if (isset($_POST["ipaddress"])) {}
    $addressing->check(-1, CREATE, $_POST);
+   $_POST["begin_ip"]=$_POST["_ipdeb0"] ."." . $_POST["_ipdeb1"] ."." . $_POST["_ipdeb2"] ."." .$_POST["_ipdeb3"];
+   $_POST["end_ip"]=$_POST["_ipfin0"] ."." . $_POST["_ipfin1"] ."." . $_POST["_ipfin2"] ."." .$_POST["_ipfin3"];
+   $_POST["begin_ip_i"]=ip2long($_POST["begin_ip"]);
+   $_POST["end_ip_i"]=ip2long($_POST["end_ip"]);
    if ($addressing->validateData($_POST)) {
       $newID = $addressing->add($_POST);
       
@@ -74,6 +78,8 @@ if (isset($_POST["add"])) {
 } else if (isset($_POST["update"])) {
    $_POST["begin_ip"]=$_POST["_ipdeb0"] ."." . $_POST["_ipdeb1"] ."." . $_POST["_ipdeb2"] ."." .$_POST["_ipdeb3"];
    $_POST["end_ip"]=$_POST["_ipfin0"] ."." . $_POST["_ipfin1"] ."." . $_POST["_ipfin2"] ."." .$_POST["_ipfin3"];
+   $_POST["begin_ip_i"]=ip2long($_POST["begin_ip"]);
+   $_POST["end_ip_i"]=ip2long($_POST["end_ip"]);
    $addressing->check($_POST['id'], UPDATE,$_POST);   
    if ($addressing->validateData($_POST))
       $addressing->update($_POST);
